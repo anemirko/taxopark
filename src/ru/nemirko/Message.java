@@ -1,20 +1,10 @@
 package ru.nemirko;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -26,11 +16,9 @@ import java.util.logging.Logger;
 @XmlType(propOrder = {"target", "dispatched", "data"})
 public class Message {
     private static final Logger LOGGER = Logger.getLogger(Message.class.getName());
-
     private Id target;
     private Id dispatched;
     private List<String> data;
-
 
     @XmlElement(name = "target")
     public Id getTarget() {
@@ -50,12 +38,12 @@ public class Message {
         return dispatched;
     }
 
-    public void setDaspatched(int dispatched) {
+    public void setDispatched(int dispatched) {
         this.dispatched = new Id(dispatched);
     }
 
-    public void setDispatched(Id daspatched) {
-        this.dispatched = daspatched;
+    public void setDispatched(Id dispatched) {
+        this.dispatched = dispatched;
     }
 
     @XmlElementWrapper(name = "sometags")
@@ -78,46 +66,12 @@ public class Message {
 
     @Override
     public String toString() {
+        Integer targetId = target != null ? target.getId() : null;
+        Integer dispatchedId = dispatched != null ? dispatched.getId() : null;
         return "Message{" +
-                "target=" + target +
-                ", daspatched=" + dispatched +
+                "target id=" + targetId +
+                ", dispatched id=" + dispatchedId +
                 ", data=" + data +
                 '}';
-    }
-    //Возможно методы toXML, toFile, fromXML надо вынести в утильный класс
-    public String toXML() throws JAXBException {
-        JAXBContext jc = JAXBContext.newInstance(Message.class);
-        Marshaller marshaller = jc.createMarshaller();
-        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-        StringWriter sw = new StringWriter();
-        marshaller.marshal(this, sw);
-        return sw.toString();
-    }
-
-    public boolean toFile(Path path) {
-        try {
-            Files.write(path, toXML().getBytes(), StandardOpenOption.CREATE_NEW);
-            return true;
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, e.getMessage());
-        }
-        return false;
-        /*try {
-            FileWriter output = new FileWriter(path.toFile());
-            output.write(toXML());
-            output.close();
-            LOGGER.info("Processed message = " + this);
-            return true;
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, e.getMessage());
-        }
-        return false;*/
-    }
-
-    public static Message fromXML(String xml) throws JAXBException {
-        JAXBContext jc = JAXBContext.newInstance(Message.class);
-        Unmarshaller um = jc.createUnmarshaller();
-        StringReader reader = new StringReader(xml);
-        return (Message) um.unmarshal(reader);
     }
 }
