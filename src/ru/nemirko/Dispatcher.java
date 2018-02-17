@@ -51,7 +51,7 @@ public class Dispatcher {
         if (opt.isPresent()) {
             return opt.get();
         }
-        LOGGER.log(Level.WARNING, String.format("Driver %d not found", id));
+        LOGGER.log(Level.WARNING, String.format("Водитель %d не найден", id));
         return null;
     }
 
@@ -96,7 +96,7 @@ public class Dispatcher {
             Thread.sleep(8000);
         } catch (Exception e) {}
         System.out.println(dispatcher.getStatusMessageById(1));
-        System.out.println(dispatcher.getStatusMessageById(12));
+        System.out.println(dispatcher.getStatusMessageById(23));
         dispatcher.shutdown();
     }
 }
