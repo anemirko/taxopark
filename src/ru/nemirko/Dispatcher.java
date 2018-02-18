@@ -5,12 +5,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -102,17 +100,22 @@ public class Dispatcher {
 
     public static void main(String[] args) throws InterruptedException{
         Dispatcher dispatcher = new Dispatcher(Paths.get("/Users/anemirko/Documents/taxi/"), 10);
-        new Random().ints(1000, 1, dispatcher.maxDrivers + 1)
-                .forEach(value -> {
-                    Message message = Util.createMessage(value);
-                    try {
-                        int id = dispatcher.processMessage(Util.messageToXML(message));
-                        LOGGER.info("Generate message dispatched id = " + id);
-                    } catch (JAXBException e) {
-                        LOGGER.log(Level.WARNING, e.getMessage());
-                    }
-                });
-
+        //Загрузим 1000 сообщений 4-мя потоками по 250 сообщений
+        List<Runnable> run = IntStream
+                .rangeClosed(1, 4)
+                .mapToObj((IntFunction<Runnable>) value -> () -> new Random().ints(250, 1, dispatcher.maxDrivers + 1)
+                        .mapToObj(Util::createMessage)
+                        .forEach(message -> {
+                            try {
+                                int id = dispatcher.processMessage(Util.messageToXML(message));
+                                LOGGER.info("1 - Generate message dispatched id = " + id);
+                            } catch (JAXBException e) {
+                                LOGGER.log(Level.WARNING, e.getMessage());
+                            }
+                        })).collect(Collectors.toList());
+        ExecutorService load = Executors.newFixedThreadPool(3);
+        run.forEach(load::submit);
+        load.shutdown();
         //Проверка получения статуса выполнения заказа
         TimeUnit.SECONDS.sleep(8);
         System.out.println(dispatcher.getStatusMessageById(1));
